@@ -31,7 +31,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 
-with open('./disease_prediction.pkl', 'rb') as f:
+with open('./disease_prediction_updated.pkl', 'rb') as f:
     disease_prd = pickle.load(f)
 
 tracker = pd.read_csv("tracker.csv")
@@ -53,7 +53,7 @@ symptoms_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_sne
 
 encoder = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 symptoms_vectors = encoder.encode(symptoms_list)
-#print(symptoms_vectors.shape)
+print(symptoms_vectors.shape)
 symptoms_dim = symptoms_vectors.shape[1]
 index = faiss.IndexFlatL2(symptoms_dim)  
 index
@@ -210,9 +210,9 @@ def medicine_prediction():
 def ai_doctor():
     if request.method == 'POST':
         user_input = request.json.get('user_input')
-        #print(user_input)
+        print(user_input)
         user_chunk = r_splitter.split_text(user_input)
-        #print(user_chunk)
+        print(user_chunk)
 
         lq = []
 
@@ -232,7 +232,7 @@ def ai_doctor():
                 symptoms_data[symptom] = 0
         user_input_processed = pd.DataFrame(symptoms_data,  index=[0])
         pred = disease_prd.predict(user_input_processed)
-        #print(type(pred))
+        print(type(pred))
 
         pred = pred.tolist()
         pred = pred[0]
@@ -248,20 +248,20 @@ def ai_doctor():
         else:
                 test = []
 
-        #print(test)
+        print(test)
 
         api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=420)
         tool = WikipediaQueryRun(api_wrapper=api_wrapper)
 
         info = tool.run(pred)+"....."
-        #print(info) 
+        print(info) 
 
 
         matches = [(cond, textdistance.levenshtein.normalized_distance(pred, cond.capitalize())) for cond in medicine_df['condition']]
         best_match, best_similarity = min(matches, key=lambda item: item[1])
 
-        #print("Best match:", best_match)
-        #print("Similarity score:", 1 - best_similarity)
+        print("Best match:", best_match)
+        print("Similarity score:", 1 - best_similarity)
 
         filtered_medicine_df = medicine_df[medicine_df['condition'] == best_match]
         sorted_medicine_df = filtered_medicine_df.sort_values(by=['rating', 'usefulCount'], ascending=False)
@@ -296,9 +296,18 @@ def ai_doctor():
 
                 
         gh = {"Disease":pred,"Test":test,"Information":info,"Medicine":drug_name,"Medicine_id":drug_id}
-        #print(gh)
+        print(gh)
 
     return jsonify(gh)
+
+
+
+
+
+
+
+
+
 ################################################################
 
 
@@ -311,7 +320,7 @@ def ai_doctor():
 # genai.configure(api_key='AIzaSyA48fLPNa9NbsvGcY8PNB3YLk68luI5qPc')
 
 # @app.route('/ai_doctor', methods=['POST'])
-#  def ai_doctor():
+# def ai_doctor():
 #     if request.method == 'POST':
 #         user_input = request.json.get('user_input')
 #         print("User Input: ", user_input)
